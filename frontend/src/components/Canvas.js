@@ -37,7 +37,6 @@ const getElementAtPosition = (elements, x, y) => {
 };
 export default function Canvas() {
 	const [elements, setElements] = useState([]);
-	const [elementType, setElementType] = useState("line");
 	const [action, setAction] = useState("none");
 	const [selectedElement, setSelectedElement] = useState(null);
 	const [tool, setTool] = useState("line");
@@ -52,6 +51,13 @@ export default function Canvas() {
 		elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
 		console.log("layout effect");
 	}, [elements]);
+
+	const updateElement = (id, x1, y1, x2, y2, type) => {
+		const updatedElement = createElement(id,x1,y1,x2,y2,tool);
+		const elementsCopy = [...elements];
+		elementsCopy[id] = updatedElement;
+		setElements(elementsCopy);
+	}
 
 	const handleMouseDown = (event) => {
 		const { clientX, clientY } = event;
@@ -70,7 +76,7 @@ export default function Canvas() {
 				clientY,
 				clientX,
 				clientY,
-				elementType
+				tool
 			);
 			setElements((prevElements) => [...prevElements, element]);
 			setAction("Drawing");
@@ -79,25 +85,16 @@ export default function Canvas() {
 	};
 
 	const handleMouseMove = (event) => {
+		const { clientX, clientY } = event;
 		if (action === "Drawing") {
-			const { clientX, clientY } = event;
 			const index = elements.length - 1;
 			const { x1, y1 } = elements[index];
-			const updatedElement = createElement(
-				index,
-				x1,
-				y1,
-				clientX,
-				clientY,
-				elementType
-			);
-			const elementsCopy = [...elements];
-			elementsCopy[index] = updatedElement;
-			setElements(elementsCopy);
+			updateElement(index, x1, y1, clientX, clientY, tool);
 			console.log("move");
 		}else if(action === 'moving'){
-			const {} = selectedElement;
-
+			const {id, x1, y1, x2, y2, type} = selectedElement;
+			const width = x2 - x1, height = y2 - y1;
+			updateElement(id, clientX, clientY, clientX + width, clientY + height, type);
 		}
 	};
 
@@ -112,22 +109,22 @@ export default function Canvas() {
 				<input
 					type="radio"
 					id="select"
-					checked={elementType === "select"}
-					onChange={() => setElementType("free")}
+					checked={tool === "select"}
+					onChange={() => setTool("select")}
 				/>
-				<label htmlFor="select">Free</label>
+				<label htmlFor="select">Select</label>
 				<input
 					type="radio"
 					id="line"
-					checked={elementType === "line"}
-					onChange={() => setElementType("line")}
+					checked={tool === "line"}
+					onChange={() => setTool("line")}
 				/>
 				<label htmlFor="line">Line</label>
 				<input
 					type="radio"
 					id="rectangle"
-					checked={elementType === "rectangle"}
-					onChange={() => setElementType("rectangle")}
+					checked={tool === "rectangle"}
+					onChange={() => setTool("rectangle")}
 				/>
 				<label htmlFor="rectangle">Rectangle</label>
 			</div>
